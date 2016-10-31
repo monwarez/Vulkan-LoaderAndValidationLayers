@@ -123,6 +123,26 @@ class DispatchTableOpsSubcommand(Subcommand):
                           "#include <vulkan/vk_layer.h>",
                           "#include <string.h>"])
 
+    # Determine if a prototype belongs to an extension in a list of extensions
+    def proto_in_ext(self, name, ext_list):
+        for ext in ext_list:
+            for api in vulkan.ext.protos:
+                if name == api.name:
+                    return True
+        return False
+
+    # Create a list of pairs mapping vulkan-wsi_linux strings to output strings
+    wsi_name_map = [('Xcb',     "#ifdef VK_USE_PLATFORM_XCB_KHR"),
+                    ('Xlib',    "#ifdef VK_USE_PLATFORM_XLIB_KHR"),
+                    ('Wayland', "#ifdef VK_USE_PLATFORM_WAYLAND_KHR"),
+                    ('Mir',     "#ifdef VK_USE_PLATFORM_MIR_KHR")]
+    # Pull out wsi flavor from a linux WSI extension API name
+    def proto_in_ext(self, name):
+        for (type, ifdef) in wsi_name_map:
+            if type in name:
+                return ifdef
+        return ''
+
     def _generate_init_dispatch(self, type):
         stmts = []
         func = []
@@ -137,7 +157,19 @@ class DispatchTableOpsSubcommand(Subcommand):
                   proto.name == "EnumerateInstanceLayerProperties" or proto.params[0].ty == "VkInstance" or \
                   proto.params[0].ty == "VkPhysicalDevice" or proto.name == "GetDeviceProcAddr":
                     continue
+                endif_output = ''
+                # Conditionally compile platform-specific APIs
+                if self.proto_in_ext(proto.name, vulkan.win32_only_exts):
+                    stmts.append("#ifdef VK_USE_PLATFORM_WIN32_KHR")
+                    endif_output = "#endif // VK_USE_PLATFORM_WIN32_KHR"
+                elif self.proto_in_ext(proto.name, vulkan.android_only_exts):
+                    stmts.append("#ifdef VK_USE_PLATFORM_ANDROID_KHR")
+                    endif_output = "#endif // VK_USE_PLATFORM_ANDROID_KHR"
+                # Output table entry
                 stmts.append("    table->%s = (PFN_vk%s) gpa(device, \"vk%s\");" % (proto.name, proto.name, proto.name))
+                # If platform-specific entry was protected by an #ifdef, close with a #endif
+                if endif_output != '':
+                    stmts.append("%s" % endif_output)
             func.append("static inline void %s_init_device_dispatch_table(VkDevice device,"
                 % self.prefix)
             func.append("%s                                               VkLayerDispatchTable *table,"
@@ -153,35 +185,51 @@ class DispatchTableOpsSubcommand(Subcommand):
                 if proto.params[0].ty != "VkInstance" and proto.params[0].ty != "VkPhysicalDevice" or \
                   proto.name == "CreateDevice" or proto.name == "GetInstanceProcAddr":
                     continue
-                # Protect platform-dependent APIs with #ifdef
-                if 'KHR' in proto.name and 'Win32' in proto.name:
+                endif_output = ''
+                # Protect platform-dependent WSI APIs with #ifdef
+                ####if 'KHR' in proto.name and 'Win32' in proto.name:
+                if self.proto_in_ext(proto.name, vulkan.win32_wsi_exts):
                     stmts.append("#ifdef VK_USE_PLATFORM_WIN32_KHR")
-                if 'KHR' in proto.name and 'Xlib' in proto.name:
-                    stmts.append("#ifdef VK_USE_PLATFORM_XLIB_KHR")
-                if 'KHR' in proto.name and 'Xcb' in proto.name:
-                    stmts.append("#ifdef VK_USE_PLATFORM_XCB_KHR")
-                if 'KHR' in proto.name and 'Mir' in proto.name:
-                    stmts.append("#ifdef VK_USE_PLATFORM_MIR_KHR")
-                if 'KHR' in proto.name and 'Wayland' in proto.name:
-                    stmts.append("#ifdef VK_USE_PLATFORM_WAYLAND_KHR")
-                if 'KHR' in proto.name and 'Android' in proto.name:
+                    endif_output = "#endif // VK_USE_PLATFORM_WIN32_KHR"
+
+
+
+
+                elif self.proto_in_ext(proto.name, vulkan.linux_wsi_exts):
+                    label = self.extract_wsi_type(proto.name)
+                    stmts.append("#ifdef %s" % label) 
+                    endif_output = "#endif // %s" % label
+                ######elif 'KHR' in proto.name and 'Xcb' in proto.name:
+                ######    stmts.append("#ifdef VK_USE_PLATFORM_XCB_KHR")
+                ######    endif_output = "#endif // VK_USE_PLATFORM_XCB_KHR"
+                ######elif 'KHR' in proto.name and 'Mir' in proto.name:
+                ######    stmts.append("#ifdef VK_USE_PLATFORM_MIR_KHR")
+                ######    endif_output = "#endif // VK_USE_PLATFORM_MIR_KHR"
+                ######elif 'KHR' in proto.name and 'Wayland' in proto.name:
+                ######    stmts.append("#ifdef VK_USE_PLATFORM_WAYLAND_KHR")
+                ######    endif_output = "#endif // VK_USE_PLATFORM_WAYLAND_KHR"
+
+
+
+
+
+                elif self.proto_in_ext(proto.name, vulkan.android_wsi_exts):
                     stmts.append("#ifdef VK_USE_PLATFORM_ANDROID_KHR")
+                    endif_output = "#endif // VK_USE_PLATFORM_ANDROID_KHR"
+
+                # Protect non-WSI platform-dependent APIs with #ifdef
+                if self.proto_in_ext(proto.name, vulkan.win32_only_exts):
+                    stmts.append("#ifdef VK_USE_PLATFORM_WIN32_KHR")
+                    endif_output = "#endif // VK_USE_PLATFORM_WIN32_KHR"
+                elif self.proto_in_ext(proto.name, vulkan.android_only_exts):
+                    stmts.append("#ifdef VK_USE_PLATFORM_ANDROID_KHR")
+                    endif_output = "#endif // VK_USE_PLATFORM_ANDROID_KHR"
                 # Output dispatch table entry
-                stmts.append("    table->%s = (PFN_vk%s) gpa(instance, \"vk%s\");" %
-                      (proto.name, proto.name, proto.name))
-                # If entry was protected by an #ifdef, close with a #endif
-                if 'KHR' in proto.name and 'Win32' in proto.name:
-                    stmts.append("#endif // VK_USE_PLATFORM_WIN32_KHR")
-                if 'KHR' in proto.name and 'Xlib' in proto.name:
-                    stmts.append("#endif // VK_USE_PLATFORM_XLIB_KHR")
-                if 'KHR' in proto.name and 'Xcb' in proto.name:
-                    stmts.append("#endif // VK_USE_PLATFORM_XCB_KHR")
-                if 'KHR' in proto.name and 'Mir' in proto.name:
-                    stmts.append("#endif // VK_USE_PLATFORM_MIR_KHR")
-                if 'KHR' in proto.name and 'Wayland' in proto.name:
-                    stmts.append("#endif // VK_USE_PLATFORM_WAYLAND_KHR")
-                if 'KHR' in proto.name and 'Android' in proto.name:
-                    stmts.append("#endif // VK_USE_PLATFORM_ANDROID_KHR")
+                stmts.append("    table->%s = (PFN_vk%s) gpa(instance, \"vk%s\");" %  (proto.name, proto.name, proto.name))
+                # If WSI entry was protected by an #ifdef, close with a #endif
+                if endif_output != '':
+                    stmts.append("%s" % endif_output)
+
             func.append("static inline void %s_init_instance_dispatch_table(" % self.prefix)
             func.append("%s        VkInstance instance," % (" " * len(self.prefix)))
             func.append("%s        VkLayerInstanceDispatchTable *table," % (" " * len(self.prefix)))
