@@ -835,13 +835,19 @@ static void demo_draw(struct demo *demo) {
     };
 
 #ifdef VK_KHR_incremental_present
+#if defined __ANDROID__
+#define DBG_MSG(msg)                                                      \
+    do {                                                                  \
+        ((void)__android_log_print(ANDROID_LOG_INFO, "Cube", "%s", msg)); \
+    } while (0)
+#endif // __ANDROID__
     uint32_t quarterOfWidth = demo->width / 4;
     uint32_t quarterOfHeight = demo->height / 4;
     VkRectLayerKHR rect = {
         .offset.x = quarterOfWidth,
         .offset.y = quarterOfHeight,
-        .extent.width = demo->width - quarterOfWidth,
-        .extent.height = demo->height - quarterOfHeight,
+        .extent.width = demo->width / 2,
+        .extent.height = demo->height / 2,
         .layer = 0,
     };
     VkPresentRegionKHR region = {
@@ -855,6 +861,15 @@ static void demo_draw(struct demo *demo) {
         .pRegions = &region,
     };
     present.pNext = &regions;
+#if defined __ANDROID__
+char msg[128];
+sprintf(msg, "Present Rectangle has offset: (%d, %d) and extent: (%d, %d)",
+        regions.pRegions->pRectangles->offset.x,
+        regions.pRegions->pRectangles->offset.y,
+        regions.pRegions->pRectangles->extent.width,
+        regions.pRegions->pRectangles->extent.height);
+DBG_MSG(msg);
+#endif // __ANDROID__
 #endif // VK_KHR_incremental_present
 
     err = demo->fpQueuePresentKHR(demo->present_queue, &present);
