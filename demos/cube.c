@@ -834,6 +834,29 @@ static void demo_draw(struct demo *demo) {
         .pImageIndices = &demo->current_buffer,
     };
 
+#ifdef VK_KHR_incremental_present
+    uint32_t quarterOfWidth = demo->width / 4;
+    uint32_t quarterOfHeight = demo->height / 4;
+    VkRectLayerKHR rect = {
+        .offset.x = quarterOfWidth,
+        .offset.y = quarterOfHeight,
+        .extent.width = demo->width - quarterOfWidth,
+        .extent.height = demo->height - quarterOfHeight,
+        .layer = 0,
+    };
+    VkPresentRegionKHR region = {
+        .rectangleCount = 1,
+        .pRectangles = &rect,
+    };
+    VkPresentRegionsKHR regions = {
+        .sType = VK_STRUCTURE_TYPE_PRESENT_REGIONS_KHR,
+        .pNext = NULL,
+        .swapchainCount = 1,
+        .pRegions = &region,
+    };
+    present.pNext = &regions;
+#endif // VK_KHR_incremental_present
+
     err = demo->fpQueuePresentKHR(demo->present_queue, &present);
     demo->frame_index += 1;
     demo->frame_index %= FRAME_LAG;
@@ -2841,6 +2864,15 @@ static void demo_init_vk(struct demo *demo) {
                 swapchainExtFound = 1;
                 demo->extension_names[demo->enabled_extension_count++] =
                     VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+            }
+            assert(demo->enabled_extension_count < 64);
+        }
+
+        for (uint32_t i = 0; i < device_extension_count; i++) {
+            if (!strcmp(VK_KHR_INCREMENTAL_PRESENT_EXTENSION_NAME,
+                        device_extensions[i].extensionName)) {
+                demo->extension_names[demo->enabled_extension_count++] =
+                    VK_KHR_INCREMENTAL_PRESENT_EXTENSION_NAME;
             }
             assert(demo->enabled_extension_count < 64);
         }
