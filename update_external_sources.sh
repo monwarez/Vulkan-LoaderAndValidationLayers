@@ -3,12 +3,12 @@
 
 set -e
 
-CURRENT_DIR="$(dirname `readlink -f $0`)"
+CURRENT_DIR="$(dirname "$(readlink -f ${BASH_SOURCE[0]})")"
 REVISION_DIR="$CURRENT_DIR/external_revisions"
 
-GLSLANG_REVISION=$(cat ${REVISION_DIR}/glslang_revision)
-SPIRV_TOOLS_REVISION=$(cat "${REVISION_DIR}"/spirv-tools_revision)
-SPIRV_HEADERS_REVISION=$(cat "${REVISION_DIR}"/spirv-headers_revision)
+GLSLANG_REVISION=$(cat "${REVISION_DIR}/glslang_revision")
+SPIRV_TOOLS_REVISION=$(cat "${REVISION_DIR}/spirv-tools_revision")
+SPIRV_HEADERS_REVISION=$(cat "${REVISION_DIR}/spirv-headers_revision")
 echo "GLSLANG_REVISION=${GLSLANG_REVISION}"
 echo "SPIRV_TOOLS_REVISION=${SPIRV_TOOLS_REVISION}"
 echo "SPIRV_HEADERS_REVISION=${SPIRV_HEADERS_REVISION}"
