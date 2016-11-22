@@ -3,7 +3,8 @@
 
 set -e
 
-REVISION_DIR=$PWD/external_revisions
+CURRENT_DIR="$(dirname `readlink -f $0`)"
+REVISION_DIR="$CURRENT_DIR/external_revisions"
 
 GLSLANG_REVISION=$(cat ${REVISION_DIR}/glslang_revision)
 SPIRV_TOOLS_REVISION=$(cat "${REVISION_DIR}"/spirv-tools_revision)
@@ -12,8 +13,8 @@ echo "GLSLANG_REVISION=${GLSLANG_REVISION}"
 echo "SPIRV_TOOLS_REVISION=${SPIRV_TOOLS_REVISION}"
 echo "SPIRV_HEADERS_REVISION=${SPIRV_HEADERS_REVISION}"
 
-BUILDDIR=$PWD
-BASEDIR=$BUILDDIR/external
+BUILDDIR=${CURRENT_DIR}
+BASEDIR="$BUILDDIR/external"
 
 function create_glslang () {
    rm -rf "${BASEDIR}"/glslang
