@@ -857,7 +857,7 @@ static void demo_draw(struct demo *demo) {
     VkPresentRegionsKHR regions = {
         .sType = VK_STRUCTURE_TYPE_PRESENT_REGIONS_KHR,
         .pNext = NULL,
-        .swapchainCount = 1,
+        .swapchainCount = present.swapchainCount,
         .pRegions = &region,
     };
     present.pNext = &regions;
