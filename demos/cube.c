@@ -862,12 +862,16 @@ static void demo_draw(struct demo *demo) {
     };
     present.pNext = &regions;
 #if defined __ANDROID__
-char msg[128];
+char msg[256];
 sprintf(msg, "Present Rectangle has offset: (%d, %d) and extent: (%d, %d)",
         regions.pRegions->pRectangles->offset.x,
         regions.pRegions->pRectangles->offset.y,
         regions.pRegions->pRectangles->extent.width,
         regions.pRegions->pRectangles->extent.height);
+DBG_MSG(msg);
+sprintf(msg, "regions = %p, regions.pRegions = %p, "
+        "regions.pRegions->pRectangles = %p",
+        &regions, regions.pRegions, regions.pRegions->pRectangles);
 DBG_MSG(msg);
 #endif // __ANDROID__
 #endif // VK_KHR_incremental_present
