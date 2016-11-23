@@ -846,8 +846,8 @@ static void demo_draw(struct demo *demo) {
     VkRectLayerKHR rect = {
         .offset.x = quarterOfWidth,
         .offset.y = quarterOfHeight,
-        .extent.width = demo->width / 2,
-        .extent.height = demo->height / 2,
+        .extent.width = demo->width / 4,
+        .extent.height = demo->height / 4,
         .layer = 0,
     };
     VkPresentRegionKHR region = {
