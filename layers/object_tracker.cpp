@@ -2718,8 +2718,8 @@ VKAPI_ATTR VkResult VKAPI_CALL QueuePresentKHR(VkQueue queue, const VkPresentInf
     return result;
 }
 
-VKAPI_ATTR VkResult VKAPI_CALL CreateDisplayPlaneSurfaceKHR(VkInstance instance, const VkDisplaySurfaceCreateInfoKHR* pCreateInfo,
-													        const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) {
+VKAPI_ATTR VkResult VKAPI_CALL CreateDisplayPlaneSurfaceKHR(VkInstance instance, const VkDisplaySurfaceCreateInfoKHR *pCreateInfo,
+                                                            const VkAllocationCallbacks *pAllocator, VkSurfaceKHR *pSurface) {
     bool skip_call = false;
     {
         std::lock_guard<std::mutex> lock(global_lock);
@@ -2728,8 +2728,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDisplayPlaneSurfaceKHR(VkInstance instance,
     if (skip_call) {
         return VK_ERROR_VALIDATION_FAILED_EXT;
     }
-    VkResult result =
-        get_dispatch_table(ot_instance_table_map, instance)->CreateDisplayPlaneSurfaceKHR(instance, pCreateInfo, pAllocator, pSurface);
+    VkResult result = get_dispatch_table(ot_instance_table_map, instance)
+                          ->CreateDisplayPlaneSurfaceKHR(instance, pCreateInfo, pAllocator, pSurface);
     {
         std::lock_guard<std::mutex> lock(global_lock);
         if (result == VK_SUCCESS) {
@@ -3078,9 +3078,9 @@ static inline PFN_vkVoidFunction InterceptWsiEnabledCommand(const char *name, Vk
         return reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceSurfaceFormatsKHR);
     if (!strcmp("vkGetPhysicalDeviceSurfacePresentModesKHR", name))
         return reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceSurfacePresentModesKHR);
-
     if ((instanceExtMap[pTable].display_enabled == true) && !strcmp("vkCreateDisplayPlaneSurfaceKHR", name))
         return reinterpret_cast<PFN_vkVoidFunction>(CreateDisplayPlaneSurfaceKHR);
+
 #ifdef VK_USE_PLATFORM_WIN32_KHR
     if ((instanceExtMap[pTable].win32_enabled == true) && !strcmp("vkCreateWin32SurfaceKHR", name))
         return reinterpret_cast<PFN_vkVoidFunction>(CreateWin32SurfaceKHR);
@@ -3149,7 +3149,7 @@ static void CheckInstanceRegisterExtensions(const VkInstanceCreateInfo *pCreateI
             instanceExtMap[pDisp].wsi_enabled = true;
         }
         if (strcmp(pCreateInfo->ppEnabledExtensionNames[i], VK_KHR_DISPLAY_EXTENSION_NAME) == 0) {
-        	instanceExtMap[pDisp].display_enabled = true;
+            instanceExtMap[pDisp].display_enabled = true;
         }
 #ifdef VK_USE_PLATFORM_XLIB_KHR
         if (strcmp(pCreateInfo->ppEnabledExtensionNames[i], VK_KHR_XLIB_SURFACE_EXTENSION_NAME) == 0) {
