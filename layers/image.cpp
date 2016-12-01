@@ -235,12 +235,20 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateImage(VkDevice device, const VkImageCreateI
         VkFormatProperties properties;
         phy_dev_data->instance_dispatch_table->GetPhysicalDeviceFormatProperties(device_data->physicalDevice, pCreateInfo->format,
                                                                                  &properties);
-        if ((properties.linearTilingFeatures) == 0 && (properties.optimalTilingFeatures == 0)) {
+        if ((pCreateInfo->tiling == VK_IMAGE_TILING_LINEAR) && (properties.linearTilingFeatures == 0)) {
             std::stringstream ss;
             ss << "vkCreateImage format parameter (" << string_VkFormat(pCreateInfo->format) << ") is an unsupported format";
-            // TODO: Verify against Valid Use section of spec. Generally if something yield an undefined result, it's invalid
             skip_call |= log_msg(device_data->report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT,
-                                 0, __LINE__, IMAGE_FORMAT_UNSUPPORTED, "IMAGE", "%s", ss.str().c_str());
+                                 0, __LINE__, VALIDATION_ERROR_02150, "IMAGE", "%s. %s.", ss.str().c_str(), 
+                                 validation_error_map[VALIDATION_ERROR_02150]);
+        }
+
+        if ((pCreateInfo->tiling == VK_IMAGE_TILING_OPTIMAL) && (properties.optimalTilingFeatures == 0)) {
+            std::stringstream ss;
+            ss << "vkCreateImage format parameter (" << string_VkFormat(pCreateInfo->format) << ") is an unsupported format";
+            skip_call |= log_msg(device_data->report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT,
+                                 0, __LINE__, VALIDATION_ERROR_02155, "IMAGE", "%s. %s.", ss.str().c_str(), 
+                                 validation_error_map[VALIDATION_ERROR_02155]);
         }
 
         // Validate that format supports usage as color attachment
@@ -288,7 +296,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateImage(VkDevice device, const VkImageCreateI
     } else {
         skip_call |=
             log_msg(device_data->report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT, 0, __LINE__,
-                    IMAGE_INVALID_FORMAT, "IMAGE", "vkCreateImage: VkFormat for image must not be VK_FORMAT_UNDEFINED");
+                VALIDATION_ERROR_00715, "IMAGE", "vkCreateImage: VkFormat for image must not be VK_FORMAT_UNDEFINED. %s.", validation_error_map[VALIDATION_ERROR_00715]);
     }
 
     // Internal call to get format info.  Still goes through layers, could potentially go directly to ICD.
