@@ -1660,7 +1660,7 @@ maintained in the master branch of the Khronos Vulkan GitHub project.
             <member externsync="true"><type>VkObjectTableNVX</type>                                         <name>objectTable</name></member>
             <member><type>VkIndirectCommandsLayoutNVX</type>                              <name>indirectCommandsLayout</name></member>
             <member><type>uint32_t</type>                                                 <name>indirectCommandsTokenCount</name></member>
-            <member len="tokenCount">const <type>VkIndirectCommandsTokenNVX</type>*       <name>pIndirectCommandsTokens</name></member>
+            <member len="indirectCommandsTokenCount">const <type>VkIndirectCommandsTokenNVX</type>*       <name>pIndirectCommandsTokens</name></member>
             <member><type>uint32_t</type>                                                 <name>maxSequencesCount</name></member>
             <member optional="true" externsync="true"><type>VkCommandBuffer</type>                          <name>targetCommandBuffer</name></member>
             <member optional="true"><type>VkBuffer</type>                                 <name>sequencesCountBuffer</name></member>
