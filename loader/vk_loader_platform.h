@@ -30,7 +30,7 @@
 #include "vulkan/vk_platform.h"
 #include "vulkan/vk_sdk_platform.h"
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(__FreeBSD__)
 /* Linux-specific common code: */
 
 // Headers:

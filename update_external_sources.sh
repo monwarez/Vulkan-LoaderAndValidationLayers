@@ -10,6 +10,9 @@ elif [[ $(uname) == "Darwin" ]]; then
     # Get greadlink with "brew install coreutils"
     CURRENT_DIR="$(dirname "$(greadlink -f ${BASH_SOURCE[0]})")"
     CORE_COUNT=$(sysctl -n hw.ncpu || echo 4)
+elif [[ $(uname) == "FreeBSD" ]]; then
+    CURRENT_DIR="$(dirname "$(readlink -f ${BASH_SOURCE[0]})")"
+    CORE_COUNT=$(sysctl -n hw.ncpu || echo 4)
 fi
 echo CORE_COUNT=$CORE_COUNT
 
